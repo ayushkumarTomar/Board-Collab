@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+   
+    "target": "es2016",                              
+    "esModuleInterop": true,                            
+    "forceConsistentCasingInFileNames": true,    
+    "rootDir": "./src",
+    "outDir": "./dist",  
+    "moduleResolution": "node",
+     
+
+    "strict": true,                                  
+
+    "skipLibCheck": true                              
+  }
+}
