@@ -1,81 +1,55 @@
-# Turborepo starter
+# Whiteboard Collaboration
 
-This is an official starter Turborepo.
+## Overview
 
-## Using this example
+Whiteboard Collaboration is an interactive and real-time web application where users can create rooms and draw together on a shared canvas. This project utilizes modern web technologies to provide a seamless and responsive user experience.
 
-Run the following command:
+## Features
 
-```sh
-npx create-turbo@latest
+- **Create Rooms**: Easily create and join rooms for collaborative drawing sessions.
+- **Real-Time Collaboration**: Draw together with multiple users in real-time using WebSockets.
+- **User-Friendly Interface**: Intuitive and easy-to-use drawing tools.
+- **Customizable Colors**: Use the color picker to choose your preferred drawing color.
+- **Clear Canvas**: Quickly clear the canvas with a single click.
+
+## Technologies Used
+
+- **Next.js**: React framework for building server-side rendered applications.
+- **Socket.IO**: For real-time, bidirectional, and event-based communication.
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development.
+- **TypeScript**: Type-safe JavaScript for better code maintainability.
+- **Turborepo**: High-performance monorepo tool for managing multiple packages.
+
+## Getting Started
+
+Follow these steps to get the project up and running locally.
+
+### Prerequisites
+
+- Node.js (version 14 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the Repository**:
+
+   ```bash
+   git clone https://github.com/yourusername/whiteboard-collab.git
+   cd whiteboard-collab
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+
+```bash
+npm install
 ```
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
+```bash
+npm run dev
 ```
-cd my-turborepo
-pnpm build
-```
+Because of the monorepo this will start both the frontend and the backend
+## Contributing
 
-### Develop
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
 
-To develop all apps and packages, run the following command:
+Please make sure to update tests as appropriate.
 
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
