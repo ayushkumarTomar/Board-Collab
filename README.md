@@ -37,7 +37,6 @@ Follow these steps to get the project up and running locally.
    git clone https://github.com/yourusername/whiteboard-collab.git
    cd whiteboard-collab
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
 
 ```bash
 npm install
