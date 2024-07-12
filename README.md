@@ -1,6 +1,7 @@
 # Whiteboard Collaboration
 
 ## Overview
+[LIVE LINK](https://collabify-whiteboard.vercel.app/)
 
 Whiteboard Collaboration is an interactive and real-time web application where users can create rooms and draw together on a shared canvas. This project utilizes modern web technologies to provide a seamless and responsive user experience.
 
@@ -20,14 +21,8 @@ Whiteboard Collaboration is an interactive and real-time web application where u
 - **TypeScript**: Type-safe JavaScript for better code maintainability.
 - **Turborepo**: High-performance monorepo tool for managing multiple packages.
 
-## Getting Started
 
 Follow these steps to get the project up and running locally.
-
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- npm or yarn
 
 ### Installation
 
@@ -45,14 +40,11 @@ npm install
 npm run dev
 ```
 Because of the monorepo this will start both the frontend and the backend
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
 
 
-![project](https://github.com/ayushkumarTomar/WhiteBoard-Collab/assets/86000647/c72b5d89-0c73-409e-b948-4c12c85b669c)
+Pull requests are welcome.
+
+
+![whiteboardGif](https://github.com/user-attachments/assets/0768e24c-d193-4eb3-a236-bce1cce7f22e)
 
 
