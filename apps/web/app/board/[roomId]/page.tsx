@@ -4,41 +4,58 @@ import { FC, useEffect, useState } from 'react'
 import { useDraw } from '../../../hooks/useDraw'
 //@ts-ignore
 import { ChromePicker } from 'react-color'
-
-
 import { io } from 'socket.io-client'
 import { drawLine } from '../../../lib/drawLine'
-const socket = io('http://localhost:3001')
-
+//@ts-ignore
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL)
+import localFont from 'next/font/local'
+import { usernameAtom ,  roomIdAtom} from '@/store/atom'
+import { useRecoilState } from 'recoil'
+//@ts-ignore
+import generateName from "sillyname";
+import Logo from './logo'
 type DrawLineProps = {
   prevPoint: Point | null
   currentPoint: Point
   color: string
 }
 
+const skFont = localFont({
+  src: "../../../public/fonts/neverRegular.woff"
+});
+
 const Page = ({params}:{
   params:{roomId:string}
 }) => {
+  const [username , setUsername] = useRecoilState(usernameAtom)
   const [color, setColor] = useState<string>('#000')
   const { canvasRef, onMouseDown, clear } = useDraw(createLine)
   const roomId = params.roomId
   console.log(params.roomId)
-  const [numUser , setNumUsers] = useState<number>(1)
+  const [numUser , setNumUsers] = useState("Loading")
   
   useEffect(() => {
+    let usernameEff = username
+    if(!usernameEff){
+      usernameEff= generateName()
+      setUsername(usernameEff)
+
+    }
+
     const ctx = canvasRef.current?.getContext('2d')
-    socket.emit("join-room" , roomId)
+    socket.emit("join-room" , roomId , usernameEff)
     socket.emit('client-ready' , roomId)
 
-    socket.on("user-joined" , ()=>{
-      toast.success('One User joined!')
-      setNumUsers(prev=>prev+1)
+
+    socket.on("roomCount" , (roomCount:string)=>{
+      setNumUsers(roomCount)
+    })
+    socket.on("user-joined" , (username:string)=>{
+      toast.success(`${username} Joined`)
 
     })
-    socket.on("user-disconnected" , ()=>{
-      toast.error('One User Left!')
-      setNumUsers(prev=>prev-1)
-
+    socket.on("user-disconnected" , (username)=>{
+      toast.success(`${username} Left`)
     })
     
     socket.on('get-canvas-state', () => {
@@ -79,28 +96,36 @@ const Page = ({params}:{
 
   return (
     <>
-        
-
-    <div className='<div className="w-screen  bg-gradient-to-br from-purple-400 via-green-500 to-red-500 flex justify-center items-center">
-  w-screen h-screen items-center'>
-      <div className='flex flex-col gap-10 pr-10'>
+    <div className="w-screen bg-zinc-500 bg-opacity-10 flex justify-between items-center p-4">
+      <div className="text-white text-xl font-bold flex">
+        <Logo />
+        <h1 className={`ml-3 ${skFont.className}`}>COLLABIFY</h1>
+      </div>
+      <div className="text-white text-md font-bold ">You : {username}</div>
+      <div className="text-white text-md font-bold ml-8">Users in the room : {numUser}</div>
+    </div>
+  
+    <div className="w-screen h-screen flex justify-center items-center">
+      <div className="flex flex-col gap-10 pr-10 ">
         <ChromePicker color={color} onChange={(e:any) => setColor(e.hex)} />
         <button
-          type='button'
-          className='p-2 rounded-md border border-black'
-          onClick={() => socket.emit('clear' , roomId)}>
+          type="button"
+          className="p-2 border border-black bg-green-400 rounded-2xl"
+          onClick={() => socket.emit('clear', roomId)}
+        >
           Clear canvas
         </button>
       </div>
       <canvas
         ref={canvasRef}
         onMouseDown={onMouseDown}
-        width={750}
+        width={900}
         height={550}
-        className='bg-slate-200 border border-black rounded-md'
+        className="bg-slate-200 border border-black rounded-2xl"
       />
     </div>
-    </>
+  </>
+  
   )
 }
 

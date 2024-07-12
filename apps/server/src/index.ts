@@ -17,20 +17,36 @@ type DrawLine = {
   currentPoint: Point;
   color: string;
 };
+const connectedClients = new Map();
+
+const registerClient = (socketId:string, roomId:string, username:string) => {
+  connectedClients.set(socketId, { roomId, username });
+};
+const updateRoomCount = (room:string) => {
+  const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+  console.log("room count updated :: " , roomSize)
+  io.to(room).emit('roomCount', roomSize);
+};
 
 io.on('connection', (socket) => {
   // Handling joining a room
-  socket.on('join-room', (roomId: string) => {
+  socket.on('join-room', (roomId: string , username:string) => {
     console.log("joining room ::: " , roomId , " userID ::: " , socket.id)
     socket.join(roomId);
-    socket.to(roomId).emit('user-joined'); // Notify others in the room
+    registerClient(socket.id, roomId, username);
+    socket.to(roomId).emit('user-joined' , username); // Notify others in the room
+    updateRoomCount(roomId)
   });
 
   // Handling leaving a room
   socket.on('leave-room', (roomId: string) => {
     console.log("user left")
     socket.leave(roomId);
-    socket.to(roomId).emit('user-disconnected'); // Notify others in the room
+    const {username} = connectedClients.get(socket.id)
+    if(!username) return
+    socket.to(roomId).emit('user-disconnected' , username); // Notify others in the room
+    connectedClients.delete(socket.id);
+    updateRoomCount(roomId)
   });
 
   // Event handlers within a specific room
@@ -48,6 +64,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('clear', (roomId: string) => io.to(roomId).emit('clear'));
+
+  socket.on("disconnect" , ()=>{
+    const {username , roomId} = connectedClients.get(socket.id)
+    if(!username) return
+    socket.to(roomId).emit('user-disconnected' , username); // Notify others in the room
+    connectedClients.delete(socket.id);
+    updateRoomCount(roomId)
+
+  })
 });
 
 server.listen(3001, () => {
