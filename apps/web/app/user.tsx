@@ -11,8 +11,10 @@ const User = () => {
     const [username , setUsername] = useRecoilState(usernameAtom)
     const router = useRouter()
     const [roomId , setRoomId]  = useRecoilState(roomIdAtom)
+    const [routing , setRouting] = useState(false)
     
     const connectSocket = ()=>{
+        setRouting(true)
         let room;
         if(!roomId) room = Array.from(Array(8), () => Math.floor(Math.random() * 36).toString(36)).join('')
         else room = roomId
@@ -26,7 +28,7 @@ const User = () => {
     <div>
     <input className="bg-slate-500 text-white px-4 py-2 rounded-xl mb-5" value={roomId} onChange={e=>setRoomId(e.target.value)} placeholder='Enter RoomId'/>
     </div>
-    <div className="bg-green-500 text-white px-4 py-2 rounded-2xl cursor-pointer" onClick={connectSocket}>Start</div>
+    <div className="bg-green-500 text-white px-4 py-2 rounded-2xl cursor-pointer" onClick={connectSocket}>{routing ? "Loading" : "Start"} </div>
     </>
   )
 }

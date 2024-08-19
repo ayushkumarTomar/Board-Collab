@@ -7,7 +7,6 @@ body {
     background-repeat: repeat;
     background-position: center;
     background-size: 250px;
-    overflow: hidden;
 }
 
 @font-face { 
@@ -15,3 +14,13 @@ body {
     src: url("/fonts/neverRegular.woff2"); 
 }
 
+.canvas-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  canvas {
+    display: block; /* Prevents canvas from having extra space below it */
+  }
+  

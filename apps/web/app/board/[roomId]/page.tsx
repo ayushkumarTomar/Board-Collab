@@ -1,16 +1,14 @@
 "use client"
 import toast from 'react-hot-toast'
-import { FC, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDraw } from '../../../hooks/useDraw'
-//@ts-ignore
-import { ChromePicker } from 'react-color'
-import { io } from 'socket.io-client'
+import { HexColorPicker } from "react-colorful";
+import { io , Socket } from 'socket.io-client'
 import { drawLine } from '../../../lib/drawLine'
-//@ts-ignore
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL)
 import localFont from 'next/font/local'
-import { usernameAtom ,  roomIdAtom} from '@/store/atom'
+import { usernameAtom } from '@/store/atom'
 import { useRecoilState } from 'recoil'
+import useWindowSize from '@/hooks/useWindow'
 //@ts-ignore
 import generateName from "sillyname";
 import Logo from './logo'
@@ -19,114 +17,181 @@ type DrawLineProps = {
   currentPoint: Point
   color: string
 }
+let socket: Socket;
+
 
 const skFont = localFont({
   src: "../../../public/fonts/neverRegular.woff"
 });
 
-const Page = ({params}:{
-  params:{roomId:string}
-}) => {
-  const [username , setUsername] = useRecoilState(usernameAtom)
-  const [color, setColor] = useState<string>('#000')
-  const { canvasRef, onMouseDown, clear } = useDraw(createLine)
-  const roomId = params.roomId
-  console.log(params.roomId)
-  const [numUser , setNumUsers] = useState("Loading")
-  
-  useEffect(() => {
-    let usernameEff = username
-    if(!usernameEff){
-      usernameEff= generateName()
-      setUsername(usernameEff)
 
+
+interface Draw {
+  prevPoint: { x: number, y: number };
+  currentPoint: { x: number, y: number };
+  ctx: CanvasRenderingContext2D;
+}
+
+const Page = ({ params }: { params: { roomId: string } }) => {
+  const [username, setUsername] = useRecoilState(usernameAtom);
+  const [color, setColor] = useState<string>('#000');
+  //@ts-ignore
+  const { canvasRef, onMouseDown, onTouchStart, clear } = useDraw(createLine);
+  const roomId = params.roomId;
+  const [numUser, setNumUsers] = useState("Connecting ...");
+  const dimension = useWindowSize();
+  const [userDimension , setUserDimension] = useState({height:0 , width:0})
+  const scale = useRef(0)
+  useEffect(()=>{
+
+    if(socket){
+    console.log("dimesions sending :: " , dimension)
+    socket.emit("dimension" , roomId , dimension)
     }
-
-    const ctx = canvasRef.current?.getContext('2d')
-    socket.emit("join-room" , roomId , usernameEff)
-    socket.emit('client-ready' , roomId)
+    scale.current = window.devicePixelRatio; // Get the device's pixel ratio
+    console.log("current scale is :: " , scale.current)
 
 
-    socket.on("roomCount" , (roomCount:string)=>{
-      setNumUsers(roomCount)
-    })
-    socket.on("user-joined" , (username:string)=>{
-      toast.success(`${username} Joined`)
+  } , [dimension , socket])
+  useEffect(() => {
 
-    })
-    socket.on("user-disconnected" , (username)=>{
-      toast.success(`${username} Left`)
-    })
-    
+    let usernameEff = username;
+    if (!usernameEff) {
+      usernameEff = generateName();
+      setUsername(usernameEff);
+    }
+    //@ts-ignore
+    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL)
+
+    const ctx = canvasRef.current?.getContext('2d');
+
+    socket.emit("join-room", roomId, usernameEff);
+    socket.emit('client-ready', roomId);
+
+    socket.on("roomCount", (roomCount: string) => {
+      setNumUsers(roomCount);
+    });
+
+    socket.on("user-joined", (username: string) => {
+      toast.success(`${username} Joined`);
+    });
+
+    socket.on("user-disconnected", (username: string) => {
+      toast.error(`${username} Left`);
+    });
+
     socket.on('get-canvas-state', () => {
-      if (!canvasRef.current?.toDataURL()) return
-      console.log('sending canvas state')
-      socket.emit('canvas-state', canvasRef.current.toDataURL() , roomId)
-    })
+      if (!canvasRef.current?.toDataURL()) return;
+      socket.emit('canvas-state', canvasRef.current.toDataURL(), roomId);
+    });
 
     socket.on('canvas-state-from-server', (state: string) => {
-      console.log('I received the state')
-      const img = new Image()
-      img.src = state
+      const img = new Image();
+      img.src = state;
       img.onload = () => {
-        ctx?.drawImage(img, 0, 0)
-      }
+        ctx?.drawImage(img, 0, 0);
+      };
+    });
+    socket.on("change-dimensions" , (dim)=>{
+      console.log('received dimensions' , dim)
+      toast.success("Resizing canvas due to other users in the room" , {
+        icon:"🤖" ,
+        position:'top-center' ,
+        duration: 4000
+      })
+      setUserDimension(dim)
+
     })
 
     socket.on('draw-line', ({ prevPoint, currentPoint, color }: DrawLineProps) => {
-      if (!ctx) return console.log('no ctx here')
-      drawLine({ prevPoint, currentPoint, ctx, color })
-    })
+      if (!ctx) return;
+      drawLine({ prevPoint, currentPoint, ctx, color });
+    });
 
-    socket.on('clear', clear)
+    socket.on('clear', clear);
+
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      onTouchStart();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    const canvas = canvasRef.current;
+    canvas?.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas?.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas?.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      socket.off('draw-line')
-      socket.off('get-canvas-state')
-      socket.off('canvas-state-from-server')
-      socket.off('clear')
-      socket.emit("leave-room" , roomId)
-    }
-  }, [canvasRef])
+      socket.off('draw-line');
+      socket.off('get-canvas-state');
+      socket.off('canvas-state-from-server');
+      socket.off('clear');
+      socket.off("change-dimensions")
+      socket.emit("leave-room", roomId);
+
+      canvas?.removeEventListener('touchstart', handleTouchStart);
+      canvas?.removeEventListener('touchmove', handleTouchMove);
+      canvas?.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
-    socket.emit('draw-line', { prevPoint, currentPoint, color } , roomId)
-    drawLine({ prevPoint, currentPoint, ctx, color })
+    socket.emit('draw-line', { prevPoint, currentPoint, color }, roomId);
+    drawLine({ prevPoint, currentPoint, ctx, color });
   }
+
 
   return (
     <>
-    <div className="w-screen bg-zinc-500 bg-opacity-10 flex justify-between items-center p-4">
-      <div className="text-white text-xl font-bold flex">
-        <Logo />
-        <h1 className={`ml-3 ${skFont.className}`}>COLLABIFY</h1>
+      <div className="w-full bg-zinc-500 bg-opacity-10 p-4 flex flex-col items-center overflow-auto">
+        <div className="flex items-center mb-4">
+          <Logo />
+          <h1 className={`text-white text-lg sm:text-2xl font-bold ml-3 ${skFont.className}`}>
+            COLLABIFY
+          </h1>
+        </div>
+        <div className="text-white text-xs sm:text-lg font-bold mb-1 text-center">
+          You: {username}
+        </div>
+        <div className="text-white text-xs sm:text-lg font-bold text-center">
+          Users : {numUser}
+          {" "} {" "} {" "}roomId : {roomId}
+        </div>
       </div>
-      <div className="text-white text-md font-bold ">You : {username}</div>
-      <div className="text-white text-md font-bold ml-8">Users in the room : {numUser}</div>
-    </div>
-  
-    <div className="w-screen h-screen flex justify-center items-center">
-      <div className="flex flex-col gap-10 pr-10 ">
-        <ChromePicker color={color} onChange={(e:any) => setColor(e.hex)} />
-        <button
-          type="button"
-          className="p-2 border border-black bg-green-400 rounded-2xl"
-          onClick={() => socket.emit('clear', roomId)}
-        >
-          Clear canvas
-        </button>
+
+      <div className="w-full h-full flex flex-col md:flex-row justify-center items-center p-4 space-y-4 md:space-y-0 md:space-x-4">
+        <div className="flex justify-center items-center">
+          <canvas
+            ref={canvasRef}
+            onMouseDown={onMouseDown}
+            onTouchStart={onTouchStart}
+            height={userDimension.height>0? userDimension.height : dimension.width > 640 ? 1100 : dimension.width - 20}
+            width={userDimension.width>0? userDimension.width : dimension.width > 640 ? dimension.height - 200 : dimension.width - 40}
+            className="bg-slate-200 border border-black rounded-lg shadow-md"
+          />
+        </div>
+        <div className="flex right-0 flex-col items-center sm:items-start">
+          <div className="w-64 sm:w-80 md:w-96"> 
+            <HexColorPicker color={color} onChange={setColor} />;
+          </div>
+          <button
+            type="button"
+            className="p-2 sm:text-lg text-xs mt-3 border border-black bg-green-400 rounded-2xl hover:bg-green-500 transition-colors"
+            onClick={() => socket.emit('clear', roomId)}
+          >
+            Clear canvas
+          </button>
+        </div>
       </div>
-      <canvas
-        ref={canvasRef}
-        onMouseDown={onMouseDown}
-        width={900}
-        height={550}
-        className="bg-slate-200 border border-black rounded-2xl"
-      />
-    </div>
-  </>
-  
-  )
+    </>
+  );
 }
 
-export default Page
+export default Page;
